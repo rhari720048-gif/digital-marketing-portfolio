@@ -63,17 +63,20 @@ function scrapeMetadata(url) {
   });
 }
 
-// Helper functions to read/write JSON
+// Helper functions to read/write JSON with cloud fallback
+let memoryProjects = null;
+
 function readProjects() {
+  if (memoryProjects !== null) {
+    return memoryProjects;
+  }
   try {
     if (!fs.existsSync(DATA_FILE)) {
-      // Ensure folder and file exists
-      fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-      fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
       return [];
     }
     const data = fs.readFileSync(DATA_FILE, 'utf8');
-    return JSON.parse(data);
+    memoryProjects = JSON.parse(data);
+    return memoryProjects;
   } catch (err) {
     console.error('Error reading projects data:', err);
     return [];
@@ -81,13 +84,15 @@ function readProjects() {
 }
 
 function writeProjects(projects) {
+  memoryProjects = projects;
   try {
-    fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-    fs.writeFileSync(DATA_FILE, JSON.stringify(projects, null, 2));
+    if (fs.existsSync(path.dirname(DATA_FILE))) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify(projects, null, 2));
+    }
     return true;
   } catch (err) {
-    console.error('Error writing projects data:', err);
-    return false;
+    console.warn('Disk write skipped (cloud read-only filesystem):', err.message);
+    return true;
   }
 }
 

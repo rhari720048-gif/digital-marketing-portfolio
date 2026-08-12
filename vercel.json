@@ -10,7 +10,13 @@
     },
     {
       "src": "server/server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "data/projects.json",
+          "server/data/projects.json"
+        ]
+      }
     }
   ],
   "routes": [
